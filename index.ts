@@ -17,10 +17,6 @@ const DEFAULT_HIDDEN_LABEL = "Thinking...";
 const MODE_OPTIONS: ThinkingStepsMode[] = ["collapsed", "summary", "expanded"];
 const SCOPE_OPTIONS: PersistedThinkingStepsPreferenceScope[] = ["project", "global"];
 
-function modeStatusText(ctx: ExtensionContext, mode: ThinkingStepsMode): string {
-	return `${ctx.ui.theme.fg("muted", "thinking:")} ${ctx.ui.theme.fg("accent", mode)}`;
-}
-
 function modeChangeMessage(mode: ThinkingStepsMode, scope: ThinkingStepsCommandScope): string {
 	if (scope === "session") {
 		return `Thinking view: ${mode}`;
@@ -82,7 +78,6 @@ function refreshThinkingUI(ctx: ExtensionContext): void {
 	if (!ctx.hasUI) return;
 	setCurrentThinkingScopeKey(ctx.cwd);
 	ctx.ui.setHiddenThinkingLabel(nextThinkingRefreshLabel(DEFAULT_HIDDEN_LABEL, ctx.cwd));
-	ctx.ui.setStatus("thinking-steps", modeStatusText(ctx, getThinkingStepsMode(ctx.cwd)));
 }
 
 function applyMode(

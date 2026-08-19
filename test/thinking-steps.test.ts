@@ -879,7 +879,7 @@ describe("thinkingStepsExtension", () => {
 			assert.deepEqual(getActiveThinkingState(), { active: false });
 			assert.deepEqual(pi.appendedEntries, []);
 			assert.equal(ctx.ui.hiddenThinkingLabels.at(-1), "Thinking...");
-			assert.deepEqual(ctx.ui.statuses.at(-1), { key: "thinking-steps", value: "thinking: collapsed" });
+			assert.equal(ctx.ui.statuses.length, 0);
 
 			await command.handler("expanded", ctx);
 			assert.equal(ctx.ui.selectCalls.length, 0);
@@ -888,7 +888,7 @@ describe("thinkingStepsExtension", () => {
 				customType: "thinking-steps.mode",
 				data: { mode: "expanded" },
 			});
-			assert.deepEqual(ctx.ui.statuses.at(-1), { key: "thinking-steps", value: "thinking: expanded" });
+			assert.equal(ctx.ui.statuses.length, 0);
 			assert.deepEqual(ctx.ui.notifications.at(-1), { message: "Thinking view: expanded", level: "info" });
 
 			await shortcut.handler(ctx);
@@ -897,7 +897,6 @@ describe("thinkingStepsExtension", () => {
 				customType: "thinking-steps.mode",
 				data: { mode: "collapsed" },
 			});
-			assert.deepEqual(ctx.ui.statuses.at(-1), { key: "thinking-steps", value: "thinking: collapsed" });
 			assert.deepEqual(ctx.ui.notifications.at(-1), { message: "Thinking view: collapsed", level: "info" });
 		} finally {
 			await sessionShutdown({}, ctx);
@@ -919,7 +918,6 @@ describe("thinkingStepsExtension", () => {
 		try {
 			await sessionStart({}, ctx);
 			assert.equal(getThinkingStepsMode(), "collapsed");
-			assert.deepEqual(ctx.ui.statuses.at(-1), { key: "thinking-steps", value: "thinking: collapsed" });
 		} finally {
 			await sessionShutdown({}, ctx);
 			resetExtensionState();
@@ -1009,7 +1007,6 @@ describe("thinkingStepsExtension", () => {
 			customType: "thinking-steps.mode",
 			data: { mode: "expanded" },
 		}]);
-		assert.deepEqual(ctx.ui.statuses.at(-1), { key: "thinking-steps", value: "thinking: expanded" });
 		assert.deepEqual(ctx.ui.notifications.at(-1), { message: "Thinking view: expanded", level: "info" });
 	});
 
@@ -1121,7 +1118,6 @@ describe("thinkingStepsExtension persistence", () => {
 			const projectShutdown = getSingleHandler(projectHarness.pi, "session_shutdown");
 			try {
 				await projectStart({}, projectHarness.ctx);
-				assert.deepEqual(projectHarness.ctx.ui.statuses.at(-1), { key: "thinking-steps", value: "thinking: expanded" });
 			} finally {
 				await projectShutdown({}, projectHarness.ctx);
 			}
@@ -1132,7 +1128,6 @@ describe("thinkingStepsExtension persistence", () => {
 			const globalShutdown = getSingleHandler(globalHarness.pi, "session_shutdown");
 			try {
 				await globalStart({}, globalHarness.ctx);
-				assert.deepEqual(globalHarness.ctx.ui.statuses.at(-1), { key: "thinking-steps", value: "thinking: collapsed" });
 			} finally {
 				await globalShutdown({}, globalHarness.ctx);
 			}
@@ -1147,7 +1142,6 @@ describe("thinkingStepsExtension persistence", () => {
 			const sessionShutdown = getSingleHandler(sessionHarness.pi, "session_shutdown");
 			try {
 				await sessionStart({}, sessionHarness.ctx);
-				assert.deepEqual(sessionHarness.ctx.ui.statuses.at(-1), { key: "thinking-steps", value: "thinking: summary" });
 			} finally {
 				await sessionShutdown({}, sessionHarness.ctx);
 			}
@@ -1169,7 +1163,6 @@ describe("thinkingStepsExtension persistence", () => {
 			try {
 				await sessionStart({}, ctx);
 				assert.equal(getThinkingStepsMode(cwd), "collapsed");
-				assert.deepEqual(ctx.ui.statuses.at(-1), { key: "thinking-steps", value: "thinking: collapsed" });
 				assert.ok(ctx.ui.notifications.some((notification) => notification.level === "warning" && notification.message.includes("Thinking steps persistence error:")));
 			} finally {
 				await sessionShutdown({}, ctx);
@@ -1193,7 +1186,6 @@ describe("thinkingStepsExtension persistence", () => {
 				try {
 					await sessionStart({}, ctx);
 					assert.equal(getThinkingStepsMode(cwd), "collapsed");
-					assert.deepEqual(ctx.ui.statuses.at(-1), { key: "thinking-steps", value: "thinking: collapsed" });
 					assert.ok(ctx.ui.notifications.some((notification) => notification.level === "warning" && notification.message.includes("Invalid thinking view preference")));
 				} finally {
 					await sessionShutdown({}, ctx);
@@ -1216,7 +1208,6 @@ describe("thinkingStepsExtension persistence", () => {
 				try {
 					await sessionStart({}, ctx);
 					assert.equal(getThinkingStepsMode(cwd), "summary");
-					assert.deepEqual(ctx.ui.statuses.at(-1), { key: "thinking-steps", value: "thinking: summary" });
 					assert.ok(ctx.ui.notifications.some((notification) => notification.level === "warning" && notification.message.includes("Thinking steps persistence error:")));
 				} finally {
 					await sessionShutdown({}, ctx);
@@ -1246,7 +1237,6 @@ describe("thinkingStepsExtension persistence", () => {
 			const projectShutdown = getSingleHandler(projectHarness.pi, "session_shutdown");
 			try {
 				await projectStart({}, projectHarness.ctx);
-				assert.deepEqual(projectHarness.ctx.ui.statuses.at(-1), { key: "thinking-steps", value: "thinking: collapsed" });
 			} finally {
 				await projectShutdown({}, projectHarness.ctx);
 			}
@@ -1262,7 +1252,6 @@ describe("thinkingStepsExtension persistence", () => {
 			const globalShutdown = getSingleHandler(globalHarness.pi, "session_shutdown");
 			try {
 				await globalStart({}, globalHarness.ctx);
-				assert.deepEqual(globalHarness.ctx.ui.statuses.at(-1), { key: "thinking-steps", value: "thinking: summary" });
 			} finally {
 				await globalShutdown({}, globalHarness.ctx);
 			}
@@ -2069,7 +2058,6 @@ describe("thinkingStepsExtension failure paths", () => {
 			try {
 				await sessionStart({}, ctx);
 				assert.equal(getThinkingStepsMode(), "summary");
-				assert.deepEqual(ctx.ui.statuses.at(-1), { key: "thinking-steps", value: "thinking: summary" });
 				assert.ok(ctx.ui.notifications.some((notification) => notification.level === "warning" && notification.message.includes("Thinking steps persistence error:")));
 			} finally {
 				await sessionShutdown({}, ctx);
