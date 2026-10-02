@@ -183,7 +183,7 @@ That patch layer is:
 
 This extension intentionally depends on Pi's current internal TUI implementation.
 
-Today, the patch relies on these internal modules in `@mariozechner/pi-coding-agent`:
+Today, the patch relies on these internal modules in `@earendil-works/pi-coding-agent`:
 
 - `dist/modes/interactive/components/assistant-message.js`
 - `dist/modes/interactive/theme/theme.js`
@@ -192,7 +192,7 @@ That means:
 
 - upstream Pi internal changes can break the patch layer
 - Pi upgrades should be treated as deliberate compatibility work
-- the pinned Pi package versions and `package-lock.json` matter
+- the dev dependencies and `package-lock.json` record the Pi release tested here
 - `npm test` is part of the maintenance contract, not an optional extra
 - if patch install fails during `session_start`, the current session stays on Pi's native thinking renderer and live mode switching is disabled for that degraded session
 - project/global default saves and clears remain available during a degraded session, but they apply only to future compatible sessions
