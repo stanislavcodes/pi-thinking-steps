@@ -1,5 +1,5 @@
 import assert from "node:assert/strict";
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdir, mkdtemp, readFile, realpath, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { describe, it } from "node:test";
@@ -7,6 +7,7 @@ import { deriveThinkingSteps, iconForThinkingRole, inferThinkingRole, parseThink
 import {
 	assertPatchableAssistantMessageComponent,
 	assertThinkingStepsTheme,
+	getPackageRoot,
 	importPiCodingAgentInternal,
 	PI_CODING_AGENT_INTERNAL_MODULES,
 	resolvePiCodingAgentInternalModuleUrl,
@@ -313,6 +314,26 @@ describe("patch guards", () => {
 			resolvePiCodingAgentInternalModuleUrl(PI_CODING_AGENT_INTERNAL_MODULES.assistantMessageComponent),
 			/assistant-message\.js$/,
 		);
+	});
+
+	it("resolves a host-provided package from the real CLI entrypoint", async () => {
+		const root = await mkdtemp(join(tmpdir(), "thinking-steps-host-"));
+		const packageRoot = join(root, "node_modules", "@fixture", "pi-host");
+		const cliPath = join(packageRoot, "dist", "cli.js");
+		const previousEntrypoint = process.argv[1];
+		await mkdir(join(packageRoot, "dist"), { recursive: true });
+		await Promise.all([
+			writeFile(join(packageRoot, "package.json"), JSON.stringify({ name: "@fixture/pi-host", type: "module" })),
+			writeFile(cliPath, ""),
+		]);
+
+		try {
+			process.argv[1] = cliPath;
+			assert.equal(getPackageRoot("@fixture/pi-host"), await realpath(packageRoot));
+		} finally {
+			process.argv[1] = previousEntrypoint;
+			await rm(root, { recursive: true, force: true });
+		}
 	});
 
 	it("reports a specific compatibility error when an internal module cannot be imported", async () => {

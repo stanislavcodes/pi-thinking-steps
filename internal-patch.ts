@@ -1,3 +1,5 @@
+import { realpathSync } from "node:fs";
+import { findPackageJSON } from "node:module";
 import { dirname, join } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 import type { AssistantMessage, ThinkingContent } from "@earendil-works/pi-ai";
@@ -84,22 +86,25 @@ function fallbackToOriginalUpdateContent(
 	}
 }
 
-function getPackageRoot(packageName: string): string {
-	let entryUrl: string;
+export function getPackageRoot(packageName: string): string {
 	try {
-		entryUrl = import.meta.resolve(packageName);
-	} catch (error) {
-		throw new Error(`Thinking Steps patch failed: could not resolve ${packageName} package root. Pi internals may be unavailable or moved.`, {
-			cause: error,
-		});
-	}
-
-	try {
-		const entryPath = fileURLToPath(entryUrl);
+		const entryPath = fileURLToPath(import.meta.resolve(packageName));
 		return dirname(dirname(entryPath));
-	} catch (error) {
-		throw new Error(`Thinking Steps patch failed: could not derive ${packageName} package root from ${entryUrl}.`, {
-			cause: error,
+	} catch (moduleResolutionError) {
+		try {
+			const hostEntrypoint = process.argv[1];
+			if (hostEntrypoint) {
+				const packageJsonPath = findPackageJSON(packageName, realpathSync(hostEntrypoint));
+				if (packageJsonPath) return dirname(packageJsonPath);
+			}
+		} catch (hostResolutionError) {
+			throw new Error(`Thinking Steps patch failed: could not resolve ${packageName} package root. Pi internals may be unavailable or moved.`, {
+				cause: { moduleResolutionError, hostResolutionError },
+			});
+		}
+
+		throw new Error(`Thinking Steps patch failed: could not resolve ${packageName} package root. Pi internals may be unavailable or moved.`, {
+			cause: moduleResolutionError,
 		});
 	}
 }
